@@ -5,7 +5,7 @@ import "./DappToken.sol";
 import "./DaiToken.sol";
 
 // 'Token Farm' is a simple staking dapp where
-// the user deposits 'Dai' tokens and receives 'Dapp' tokens
+// the user deposits 'Dai' tokens (fake) and receives 'Dapp' tokens
 contract TokenFarm {
     // State variable, this is going to be stored in the blockchain
     string public name = "Dapp Token Farm";
