@@ -9,6 +9,7 @@ import "./DaiToken.sol";
 contract TokenFarm {
     // State variable, this is going to be stored in the blockchain
     string public name = "Dapp Token Farm";
+    address public owner; // declares 'owner' variable, type 'address'. Will be used in future requirements
     DappToken public dappToken;
     DaiToken public daiToken;
 
@@ -33,15 +34,23 @@ contract TokenFarm {
     // Constructor function will run only once
     // whenever the smart contract is deployed to the network
     constructor(DappToken _dappToken, DaiToken _daiToken) public {
-        // Local variables are asigned to state variables so
-        // they could be accessed by other functions
+        // Local variables (types are tokens) are assigned to state variables so
+        // they can be accessed by other functions
         dappToken = _dappToken;
         daiToken = _daiToken;
+        // The first msg.sender (deployer account) is assigned to 'owner' state variable
+        owner = msg.sender;
     }
+
+    /* ================================================== */
 
     // 1 - Token staking logic (Deposit)
     function stakeTokens(uint256 _amount) public {
         // === TRANSFER DAI TOKENS TO THIS CONTRACT FOR STAKING ===
+        // Require amount greater than 0
+        require(_amount > 0, "Amount cannot be 0");
+        // require: if the condition is not met (result equals 'false') then the function won't be executed
+
         daiToken.transferFrom(msg.sender, address(this), _amount);
         // transferFrom: a native function from the Token Contract (parameters: sender, receiver, amount)
         // msg.sender: a special, global, native variable proper of Solidity
@@ -63,7 +72,38 @@ contract TokenFarm {
         hasStaked[msg.sender] = true;
     }
 
+    /* ================================================== */
+
     // 2 - Token Unstaking (Withdraw)
+    function unstakeTokens() public {
+        // Fetch staking balance
+        uint256 balance = stakingBalance[msg.sender];
+        // Require balance amount to be greater than 0
+        require(balance > 0, "Staking balance cannot be 0");
+        // Transfer Mock DAI tokens to this contract for staking
+        daiToken.transfer(msg.sender, balance);
+        // Reset staking balance
+        stakingBalance[msg.sender] = 0;
+        // Update staking status
+        isStaking[msg.sender] = false;
+    }
+
+    /* ================================================== */
 
     // 3 - Issuing tokens
+    function issueTokens() public {
+        // Require Token Issuer to be the Owner of the contract (only owner can call this function)
+        require(msg.sender == owner, "Caller must be the owner");
+
+        for (uint256 i = 0; i < stakers.length; i++) {
+            // Get recipient from the array and save in a variable:
+            address recipient = stakers[i];
+            // Fetch recipient's account balance:
+            uint256 balance = stakingBalance[recipient];
+            // Transfer Dapp Tokens (same amount as deposited Dai):
+            if (balance > 0) {
+                dappToken.transfer(recipient, balance);
+            }
+        }
+    }
 }
